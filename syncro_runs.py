@@ -183,7 +183,7 @@ main(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
 """
 
 # eps 0007-0001
-
+"""
 epsilon = 0.001
 
 S = 256
@@ -222,7 +222,7 @@ ncpu = 256
 psi0 = xplus
 
 main(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
-
+"""
 
 epsilon = 0.007
 
