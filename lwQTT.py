@@ -168,11 +168,6 @@ class QTT:
             print("invalid environment chosen: expected type string with arguments 'x', 'y' or 'z', but got: ", self.env)
 
 
-        ### lindblad operators
-
-        self.Lp = qp.basis(2,1)*qp.basis(2,0).dag()
-        self.Lm = qp.basis(2,0)*qp.basis(2,1).dag()
-
         # second order expansions of system hamiltonian and interaction hamiltonian for single temperature, for multiple 
         # temperatures I will have to implement a different method could potentially just make a MC method for multiple 
         # temperatures where the expansions are updated for each temp
