@@ -1,19 +1,11 @@
 # QTT class
 
-from os import times_result
 import sys as sys
-import matplotlib.pyplot as plt
 import numpy as np
-import numpy.ma as ma
 import qutip as qp
 import random as rnd
-import time as time
-from datetime import timedelta
-import math as math
 import multiprocessing as mp
-from tqdm import tqdm
-from scipy.linalg import expm
-from mpl_toolkits.mplot3d import Axes3D
+import time as time
 
 """ utilities """
 
@@ -125,6 +117,8 @@ class QTT:
         else:
             self.H          = hamiltonian
 
+        self.eps    = 0
+        self.delta  = 0
         
         # variables not defined by init args
         self.resolution     = 0
@@ -184,13 +178,13 @@ class QTT:
         # temperatures I will have to implement a different method could potentially just make a MC method for multiple 
         # temperatures where the expansions are updated for each temp
 
-        pdensity        = 1 / ( np.exp( 1/self.temperature ) - 1 )
-        self.gammap          = pdensity
-        self.gammam          = pdensity + 1
+        pdensity            = 1 / ( np.exp( 1/self.temperature ) - 1 )
+        self.gammap         = pdensity
+        self.gammam         = pdensity + 1
 
         # temperature dependent interaction strength
-        self.thetap     = np.sqrt(self.gammap) * self.theta
-        self.thetam     = np.sqrt(self.gammam) * self.theta
+        self.thetap         = np.sqrt(self.gammap) * self.theta
+        self.thetam         = np.sqrt(self.gammam) * self.theta
 
         self.H_expansion    = np.eye(2) - 1j*self.dt * self.H - (self.dt**2/2) * self.H @ self.H
         self.Up_expansion   = np.eye(4) - 1j*self.thetap * self.Up - (self.thetap**2/2) * self.Up @ self.Up
@@ -209,7 +203,7 @@ class QTT:
     def system_hamiltonian(self, delta, epsilon):
         # Hamiltonian in the rotating reference system
 
-        self.H = delta * sigmaz + epsilon * sigmay
+        self.H = 0.5*(delta * sigmaz + epsilon * sigmay)
 
         return 0
 
@@ -226,19 +220,14 @@ class QTT:
         return self.rhoResult
 
 
-    def blochvec(self, LB=False):
+    def blochvec(self):
         # calculating bloch vector
 
         print('compute rho self.rho() before computing blochvecs')
 
-        if LB is False:
-            x = self.rhoResult[:,1,0] + self.rhoResult[:,0,1]
-            y = 1j*(self.rhoResult[:,1,0] - self.rhoResult[:,0,1])
-            z = self.rhoResult[:,0,0] - self.rhoResult[:,1,1]
-        else:
-            x = self.rhoLB[:,1,0] + self.rhoLB[:,0,1]
-            y = 1j*(self.rhoLB[:,1,0] - self.rhoLB[:,0,1])
-            z = self.rhoLB[:,0,0] - self.rhoLB[:,1,1]
+        x = self.rhoLB[:,1,0] + self.rhoLB[:,0,1]
+        y = 1j*(self.rhoLB[:,1,0] - self.rhoLB[:,0,1])
+        z = self.rhoLB[:,0,0] - self.rhoLB[:,1,1]
 
         self.blochvecResult = [x.real, y.real, z.real]
 
@@ -269,11 +258,21 @@ class QTT:
 
         for s in range(S):
 
+            ### can implement rough time estimate in this loop
+
+            if s == 0:
+                ti = time.perf_counter()
+
             if self.burnin > 0:
                 burnin_state = self.Burnin(psi_sys_0, self.burnin, self.burnin*self.dt)
                 MC_traj[s] = self.Traj(burnin_state, timesteps, finaltime, traj_resolution)
             else:
                 MC_traj[s] = self.Traj(psi_sys_0, timesteps, finaltime, traj_resolution)
+
+            if s == 0:
+                tf = time.perf_counter()
+                print('estimated sim time for eps=' + str(self.eps) + ' del=' + str(self.delta) \
+                    + ' is ' + '{:.2f}'.format( (tf - ti)*S/60 ) + 'minutes' )
 
             
             #self.seed += 1
@@ -434,35 +433,6 @@ class QTT:
         return H_newpsi_s
 
 
-    def lindblad(self):
-
-        timearray   = np.linspace(self.inittime, self.finaltime, self.timesteps)
-
-        self.times_result = timearray
-
-        #print(timearray.shape)
-
-        a           = np.sqrt( (self.theta**2) / (2.0*self.dt))
-
-        c_ops       = [ np.sqrt(self.gammam) * a * self.Lm, np.sqrt(self.gammap) * a * self.Lp ]
-
-        print('collapse operators: ', c_ops)
-        print('init state: ', self.state0)
-        print('hamiltonian: ', self.H)
-
-        lb_result   = qp.mesolve(qp.Qobj(self.H), qp.Qobj(self.state0), timearray, c_ops, [])
-
-        self.rhoLB  = np.array(lb_result.states)
-
-        lx = self.rhoLB[:,1,0] + self.rhoLB[:,0,1]
-        ly = 1j*(self.rhoLB[:,1,0] - self.rhoLB[:,0,1])
-        lz = self.rhoLB[:,0,0] - self.rhoLB[:,1,1]
-
-        self.blochvecLB = [lx.real, ly.real, lz.real]
-
-        return lb_result
-
-
     def measure(self, Psi, p):
         # measuring environment after sys@env interaction
 
@@ -523,331 +493,6 @@ class QTT:
         return psi_s
 
 
-    def freq(self, axis=0):
-
-        # master loop - computing freq for each individual traj and storing it in 'frequencies'-array
-        # axis = 0 (z-axis) axis = 1 (x-axis) axis = 2 (y-axis) 
-
-        QT = self.mcResult
-
-        S = QT[:,0,0,0].size
-
-        times = self.times()
-
-        frequencies = np.zeros(S)
-
-        for s in range(S):
-
-            rho = QT[s] @ dag(QT[s])
-
-            rx = rho[:,1,0] + rho[:,0,1]
-            ry = 1j*(rho[:,1,0] - rho[:,0,1])
-            rz = rho[:,0,0] - rho[:,1,1]
-
-            #print('bloch vec x: ', rx.shape)
-
-            eps = 1e-1 # sensitivity for detecting minima
-
-            if axis == 0:
-                angles = np.arctan2(ry.real, rx.real)
-                
-            elif axis == 1:
-                angles = np.arctan2(ry.real, rz.real)
-            
-            elif axis == 2:
-                angles = np.arctan2(rx.real, rz.real)
-
-
-            abs_angles = np.abs(angles)
-            minima = ma.masked_less(abs_angles, eps).mask
-            
-            # for loop to determine suitable sensitivity in cut off
-            
-            count = 0; long_count = 0
-
-            for i in range(minima.size - 1):
-
-                if minima[i] or minima[i + 1]:
-                    
-                    if count > long_count:
-
-                        long_count = count
-                    
-                    count = 0
-
-                else:
-
-                    count += 1
-
-            sens = int(np.floor(long_count/2)) # computing sensitivity
-
-            # for-loop to cut off extra maxima around peaks due to diffusion "noise"
-
-            #cut_minima = minima[sens:]
-            cutoff_minima = np.copy(minima)
-
-            ### debugging
-            if sens <= 1:
-
-                """
-                print('angles shape ', angles.shape, 'minima shape: ', minima.shape)
-                print('sens: ', sens)
-                print('cutoff_minima shape: ', cutoff_minima.shape)
-
-                # could even make it so you can init the class with a designated debug folder
-                debugpath = '../data/debug/freq/trajectory_debug_freq_minima'
-                np.save(debugpath, QT[s])
-
-                bugresult = np.asarray([rx, ry])
-                debugpath2 = '../data/debug/freq/bvecXY_debug_freq_minima'
-                np.save(debugpath2, bugresult)
-
-                self.debug = True 
-                """
-                break
-            
-            else:
-
-                cutoff_minima[:sens] = 0
-
-                for i in range(cutoff_minima.size):
-
-                    if cutoff_minima[i]:
-
-                        cutoff_minima[ i + 1 : (i + sens) ] = 0
-
-            # computing frequency
-
-            rotcount = np.sum(cutoff_minima)
-
-            total_angle = 2*np.pi * rotcount + abs_angles[-1]
-
-            rotations = total_angle/(2*np.pi)
-
-            frequencies[s] = rotations / times[-1]
-
-        measured_frequency = np.mean(frequencies)
-
-        return measured_frequency
-
-
-    def freqSynchro(self, M, S, N, burnin, psi0, simtime, ncpu, delta0, dDelta, epsilon):
-
-        # M: number of quantum trajectory simulation to perform
-        # S: number of monte carlo simulations (trajectories per run)
-        # N: number of timesteps per trajectory
-        # dDelta: frequency difference (system frequency, ie H_0 = omega/2 * sigmaz)
-
-        ### finding burnin state:
-
-        burnin_finaltime = burnin * (simtime/N)
-
-        traj_freq = np.zeros(M)
-
-        omega = np.linspace(delta0-dDelta, delta0+dDelta, M)
-
-        for m in range(M):
-
-            self.system_hamiltonian(omega[m], epsilon)
- 
-            self.Burnin(psi0, burnin, burnin_finaltime)
-            burnin_state = self.state
-
-            self.paraMC(S, burnin_state, N, simtime, ncpu)
-
-            self.seed += ncpu + 1 # keeping fresh seeding for all MC simulations
-
-            # computing bloch vectors
-            #self.rho()
-            #self.blochvec()
-
-            traj_freq[m] = self.freq()
-        
-
-        self.freqResult = traj_freq
-
-        return traj_freq
-
-
-    def freqSynchro4(self, S, N, burnin, psi0, simtime, ncpu, epsilon):
-
-        # M: number of quantum trajectory simulation to perform
-        # S: number of monte carlo simulations (trajectories per run)
-        # N: number of timesteps per trajectory
-        # dDelta: frequency difference (system frequency, ie H_0 = omega/2 * sigmaz)
-
-        M = 4   # editing function without changing too much
-
-        traj_freq   = np.zeros(M)
-        freqdata    = np.zeros((M, S, N, 2, 1), dtype='complex128')
-
-        delta = np.array([-1.5*epsilon, -0.5*epsilon, 0.5*epsilon, 1.5*epsilon])
-
-        for m in range(M):
-
-            self.system_hamiltonian(delta[m], epsilon)
- 
-            self.burnin = burnin
-
-            self.paraMC(S, psi0, N, simtime, ncpu)
-
-            self.seed += ncpu + 1 # keeping fresh seeding for all MC simulations
-
-            freqdata[m] = self.mcResult
-
-            #traj_freq[m] = self.freq()
-        
-
-        #self.freqResult = traj_freq
-
-        return freqdata
-
-
-    def freqSimulationResult(self, S, N, burnin, psi0, simtime, ncpu, delta, epsilon):
-
-        # M: number of quantum trajectory simulation to perform
-        # S: number of monte carlo simulations (trajectories per run)
-        # N: number of timesteps per trajectory
-        # dDelta: frequency difference (system frequency, ie H_0 = omega/2 * sigmaz)
-
-        M           = delta.size
-        traj_freq   = np.zeros(M)
-        freqdata    = np.zeros((M, S, N, 2, 1), dtype='complex128')
-
-        for m in tqdm(range(M)):
-
-            self.system_hamiltonian(delta[m], epsilon)
- 
-            self.burnin = burnin
-
-            self.paraMC(S, psi0, N, simtime, ncpu)
-
-            self.seed += ncpu + 1 # keeping fresh seeding for all MC simulations
-
-            freqdata[m] = self.mcResult
-
-            #traj_freq[m] = self.freq()
-        
-
-        #self.freqResult = traj_freq
-
-        return freqdata
-
-
-    def fft_angles2freq(self, angles, dt):
-
-        fft_result  = np.fft.fft(angles)
-        freq_array  = np.fft.fftfreq(angles.size, d=dt)
-
-        ### real or imag part, not sure
-
-        fftmeasfreq = freq_array[ np.argmax( fft_result.real ) ]
-        #fftmeasfreq = freq_array[ np.argmax( fft_result.real ) ]
-
-        return fftmeasfreq
-
-
-    def fft_freq(self, trajectories, dt):
-
-        S = trajectories[:,0,0,0].size
-
-        freq_result = np.zeros(S)
-
-        for s in tqdm(range(S)):
-
-            rho = trajectories[s] @ dag(trajectories[s])
-
-            x = ( rho[:,1,0] + rho[:,0,1] ).real
-            rx = x - np.mean(x)
-
-            y = ( 1j*(rho[:,1,0] - rho[:,0,1]) ).real
-            ry = y - np.mean(y)
-
-            angles = np.arctan2(ry, rx)
-
-            freq_result[s] = self.fft_angles2freq(angles, dt)
-
-        avgfreq = np.mean(freq_result)
-
-        return avgfreq
-
-
-    def old_angles2freq(self, angles, simtime):
-
-        eps = 1e-1
-        abs_angles = np.abs(angles)
-        minima = ma.masked_less(abs_angles, eps).mask
-        
-        # for loop to determine suitable sensitivity in cut off
-        
-        count = 0; long_count = 0
-
-        for i in range(minima.size - 1):
-
-            if minima[i] or minima[i + 1]:
-                
-                if count > long_count:
-
-                    long_count = count
-                
-                count = 0
-
-            else:
-
-                count += 1
-
-        sens = int(np.floor(long_count/2)) # computing sensitivity
-
-        # for-loop to cut off extra maxima around peaks due to diffusion "noise"
-
-        #cut_minima = minima[sens:]
-        cutoff_minima = np.copy(minima)
-
-        cutoff_minima[:sens] = 0
-
-        for i in range(cutoff_minima.size):
-
-            if cutoff_minima[i]:
-
-                cutoff_minima[ i + 1 : (i + sens) ] = 0
-
-
-        rotcount = np.sum(cutoff_minima)
-
-        total_angle = 2*np.pi * rotcount + abs_angles[-1]
-
-        rotations = total_angle/(2*np.pi)
-
-        measured_frequency = rotations / simtime
-
-        return measured_frequency
-
-
-    def old_freq(self, trajectories, simtime):
-
-        S = trajectories[:,0,0,0].size
-
-        freq_result = np.zeros(S)
-
-        for s in tqdm(range(S)):
-
-            rho = trajectories[s] @ dag(trajectories[s])
-
-            x = ( rho[:,1,0] + rho[:,0,1] ).real
-            rx = x - np.mean(x)
-
-            z = ( rho[:,0,0] - rho[:,1,1] ).real
-            rz = z - np.mean(z)
-
-            angles = np.arctan2(rx, rz)
-
-            freq_result[s] = self.old_angles2freq(angles, simtime)
-
-        avgfreq = np.mean(freq_result)
-
-        return avgfreq
-
-
     def freqSimulationResult(self, S, N, burnin, psi0, simtime, ncpu, delta, epsilon, res=10000):
 
         # M: number of quantum trajectory simulation to perform
@@ -859,7 +504,15 @@ class QTT:
         traj_freq   = np.zeros(M)
         freqdata    = np.zeros((M, S, res, 2, 1), dtype='complex128')
 
-        for m in tqdm(range(M)):
+        for m in range(M):
+
+            ### implement timing of this too
+
+            self.delta  = delta[m]
+            self.eps    = epsilon
+
+            if m == 0:
+                ti = time.perf_counter()
 
             self.system_hamiltonian(delta[m], epsilon)
  
@@ -871,12 +524,84 @@ class QTT:
 
             freqdata[m] = self.mcResult
 
+            if s == 0:
+                tf = time.perf_counter()
+                print('full sim time estimate=' + '{:.2f}'.format((tf-ti)*M/60) + 'minutes' )
+
             #traj_freq[m] = self.freq()
         
 
         #self.freqResult = traj_freq
 
         return freqdata
+
+
+    def wrap_freq(self, trajectories, simtime):
+
+        S = trajectories[:,0,0,0].size
+
+        freq_result = np.zeros(S)
+
+        for s in range(S):
+
+            rho = trajectories[s] @ dag(trajectories[s])
+
+            rx = ( rho[:,1,0] + rho[:,0,1] ).real
+            #rx = x - np.mean(x)
+
+            ry = ( 1j*(rho[:,0,1] - rho[:,1,0]) ).real
+            #ry = y - np.mean(y)
+
+            angles              = np.arctan2(rx, ry)
+
+            unwrapAngles        = np.unwrap(angles)
+            
+            angles_diff         = unwrapAngles[-1] - unwrapAngles[0]
+            
+            rotations           = angles_diff
+            
+            measured_frequency  = rotations / simtime
+
+            freq_result[s]      = measured_frequency
+
+        avgfreq = np.mean(freq_result)
+
+        return avgfreq
+
+
+    def std_freq(self, trajectories, simtime):
+
+        S = trajectories[:,0,0,0].size
+
+        freq_result = np.zeros(S)
+
+        for s in range(S):
+
+            rho = trajectories[s] @ dag(trajectories[s])
+
+            rx = ( rho[:,1,0] + rho[:,0,1] ).real
+            #rx = x - np.mean(x)
+
+            ry = ( 1j*(rho[:,0,1] - rho[:,1,0]) ).real
+            #ry = y - np.mean(y)
+
+            angles              = np.arctan2(rx, ry)
+
+            unwrapAngles        = np.unwrap(angles)
+            
+            angles_diff         = unwrapAngles[-1] - unwrapAngles[0]
+            
+            rotations           = angles_diff
+            
+            measured_frequency  = rotations / simtime
+
+            freq_result[s]      = measured_frequency
+
+        stdfreq = np.std(freq_result)
+
+        return stdfreq
+
+
 
 
 
