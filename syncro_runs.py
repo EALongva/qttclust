@@ -186,7 +186,7 @@ main(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
 
 epsilon = 0.001
 
-S = 512
+S = 256
 N = 400000
 burnin = 150000
 res = 10000
@@ -198,8 +198,7 @@ theta = 0.01
 
 dt = 0.01
 simtime = N*dt
-seed = 1947571
-ncpu = 512
+ncpu = 256
 psi0 = xplus
 
 main(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
@@ -207,7 +206,7 @@ main(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
 
 epsilon = 0.0035
 
-S = 512
+S = 256
 N = 400000
 burnin = 150000
 res = 10000
@@ -219,8 +218,7 @@ theta = 0.01
 
 dt = 0.01
 simtime = N*dt
-seed = 1947571
-ncpu = 512
+ncpu = 256
 psi0 = xplus
 
 main(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
@@ -228,7 +226,7 @@ main(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
 
 epsilon = 0.007
 
-S = 512
+S = 256
 N = 400000
 burnin = 150000
 res = 10000
@@ -240,8 +238,7 @@ theta = 0.01
 
 dt = 0.01
 simtime = N*dt
-seed = 1947571
-ncpu = 512
+ncpu = 256
 psi0 = xplus
 
 main(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
