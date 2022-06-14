@@ -75,7 +75,7 @@ class QTT:
         self.meas           = meas_basis
         self.seed           = seed
 
-        print('QTT Class init\nEnvironment in ', self.env, '  Measurements in ', self.meas)
+        #print('QTT Class init\nEnvironment in ', self.env, '  Measurements in ', self.meas)
 
         ### for debugging:
 
@@ -244,7 +244,7 @@ class QTT:
         if dseed == 0:
             dseed = self.seed
 
-        print('seed: ', dseed)
+        #print('seed: ', dseed)
 
         rnd.seed(dseed)
 
@@ -265,8 +265,8 @@ class QTT:
 
             if s == 0:
                 tf = time.perf_counter()
-                print('estimated sim time for eps=' + str(self.eps) + ' del=' + str(self.delta) \
-                    + ' is ' + '{:.1f}'.format( (tf - ti)*S/60 ) + 'minutes' )
+                #print('estimated sim time for eps=' + str(self.eps) + ' del=' + str(self.delta) \
+                #    + ' is ' + '{:.1f}'.format( (tf - ti)*S/60 ) + 'minutes' )
 
             
             #self.seed += 1
@@ -299,7 +299,7 @@ class QTT:
 
         self.mcResult = np.concatenate(np.asarray(result)) #tiling trajectory results from all cpus
 
-        print('successfully simulated ', self.mcResult[:,0,0,0].size, ' trajectories')
+        #print('successfully simulated ', self.mcResult[:,0,0,0].size, ' trajectories')
 
         return 0
 
@@ -594,7 +594,6 @@ class QTT:
         stdfreq = np.std(freq_result)
 
         return stdfreq
-
 
 
 
