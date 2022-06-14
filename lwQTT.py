@@ -266,7 +266,7 @@ class QTT:
             if s == 0:
                 tf = time.perf_counter()
                 print('estimated sim time for eps=' + str(self.eps) + ' del=' + str(self.delta) \
-                    + ' is ' + '{:.2f}'.format( (tf - ti)*S/60 ) + 'minutes' )
+                    + ' is ' + '{:.1f}'.format( (tf - ti)*S/60 ) + 'minutes' )
 
             
             #self.seed += 1
@@ -518,9 +518,9 @@ class QTT:
 
             freqdata[m] = self.mcResult
 
-            if s == 0:
+            if m == 0:
                 tf = time.perf_counter()
-                print('full sim time estimate=' + '{:.2f}'.format((tf-ti)*M/60) + 'minutes' )
+                print('full sim time estimate=' + '{:.1f}'.format((tf-ti)*M/60) + 'minutes' )
 
             #traj_freq[m] = self.freq()
         
