@@ -70,6 +70,7 @@ def main(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=100
 path = '../../../njord/erlenalo/data/'
 
 ### test test test
+"""
 S = 4
 N = 100
 burnin = 100
@@ -87,3 +88,97 @@ ncpu = 4
 psi0 = xplus
 
 main(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
+
+"""
+
+
+epsilon = 0.005
+
+S = 512
+N = 400000
+burnin = 150000
+res = 10000
+
+print('simulating for epsilon : ', epsilon)
+ndelta = 36
+delta = np.linspace(-3.0*epsilon, 3.0*epsilon, ndelta)
+theta = 0.01
+
+dt = 0.01
+simtime = N*dt
+seed = 1947571
+ncpu = 256
+psi0 = xplus
+
+main(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
+
+
+
+epsilon = 0.01
+
+S = 512
+N = 400000
+burnin = 150000
+res = 10000
+
+print('simulating for epsilon : ', epsilon)
+ndelta = 36
+delta = np.linspace(-3.0*epsilon, 3.0*epsilon, ndelta)
+theta = 0.01
+
+dt = 0.01
+simtime = N*dt
+seed = 1947571
+ncpu = 256
+psi0 = xplus
+
+main(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
+
+
+
+epsilon = 0.015
+
+S = 512
+N = 400000
+burnin = 150000
+res = 10000
+
+print('simulating for epsilon : ', epsilon)
+ndelta = 36
+delta = np.linspace(-3.0*epsilon, 3.0*epsilon, ndelta)
+theta = 0.01
+
+dt = 0.01
+simtime = N*dt
+seed = 1947571
+ncpu = 256
+psi0 = xplus
+
+main(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
+
+
+
+
+epsilon = 0.02
+
+S = 512
+N = 400000
+burnin = 150000
+res = 10000
+
+print('simulating for epsilon : ', epsilon)
+ndelta = 36
+delta = np.linspace(-3.0*epsilon, 3.0*epsilon, ndelta)
+theta = 0.01
+
+dt = 0.01
+simtime = N*dt
+seed = 1947571
+ncpu = 256
+psi0 = xplus
+
+main(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
+
+
+
+# end
