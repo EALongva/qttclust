@@ -2,7 +2,6 @@
 
 import sys as sys
 import numpy as np
-import qutip as qp
 import random as rnd
 import multiprocessing as mp
 import time as time
