@@ -591,7 +591,7 @@ class QTT:
 
             freq_result[s]      = measured_frequency
 
-        stdfreq = np.std(freq_result)
+        stdfreq = np.std(freq_result)/np.sqrt(S)
 
         return stdfreq
 
