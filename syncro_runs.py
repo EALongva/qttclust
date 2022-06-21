@@ -75,7 +75,7 @@ def mainT01(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=
     env = 'z'
     meas_basis = 'x'
     dt = simtime/N
-    
+
     ### main simulation
 
     class_instance = QTT(env, meas_basis, theta=theta, temperature=0.1, seed=seed)
@@ -308,7 +308,7 @@ simtime = N*dt
 ncpu = 256
 psi0 = xplus
 
-mainT01(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
+#mainT01(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
 
 
 epsilon = 0.0035
