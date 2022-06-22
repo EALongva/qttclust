@@ -93,7 +93,7 @@ def mainT01(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=
 
     measfreqres, stdfreq = measured_frequency_result(result, simtime)
 
-    freqpath = 'dtune_smalleps_T01/'
+    freqpath = 'dtune_T01_bigdelta/'
     savename = path + freqpath + 'OMEGA_' + 'eps' + str(epsilon).replace('.', '') + \
         '_theta' + str(theta).replace('.', '') + '_dt' + str(dt).replace('.', '') + \
         '_S' + str(S) + '_N' + str(N) + '_freqN' + str(delta.size) + '_burninN' + str(burnin) + '_T01'
@@ -331,7 +331,7 @@ main(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
 """
 
 
-# eps 0007-0001, temperature 0.1
+# eps 0007-0001, temperature 0.1, need to have bigger delta values for the synchronisation region to be visible
 """
 epsilon = 0.001
 
@@ -394,6 +394,74 @@ mainT01(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
 """
 
 
+# eps 0007-0001, temperature 0.1, with bigger delta values and N=200000(faster)
+
+epsilon = 0.001
+
+S = 256
+N = 200000
+burnin = 150000
+res = 10000
+
+print('simulating for epsilon : ', epsilon)
+ndelta = 48
+delta = np.linspace(-0.3, 0.3, ndelta)
+theta = 0.01
+
+dt = 0.01
+simtime = N*dt
+ncpu = 256
+psi0 = xplus
+
+mainT01(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
+
+
+epsilon = 0.0035
+
+S = 256
+N = 200000
+burnin = 150000
+res = 10000
+
+print('simulating for epsilon : ', epsilon)
+ndelta = 48
+delta = np.linspace(-0.3, 0.3, ndelta)
+theta = 0.01
+
+dt = 0.01
+simtime = N*dt
+ncpu = 256
+psi0 = xplus
+
+mainT01(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
+
+
+epsilon = 0.007
+
+S = 256
+N = 200000
+burnin = 150000
+res = 10000
+
+print('simulating for epsilon : ', epsilon)
+ndelta = 48
+delta = np.linspace(-0.3, 0.3, ndelta)
+theta = 0.01
+
+dt = 0.01
+simtime = N*dt
+ncpu = 256
+psi0 = xplus
+
+mainT01(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
+
+
+
+
+
+
+# trying to simualte with envZ measured in Y instead of X basis (unsuccessful)
+"""
 epsilon = 0.003
 
 S = 128
@@ -413,5 +481,8 @@ psi0 = xplus
 
 
 mainZY(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
+
+"""
+
 
 # end
