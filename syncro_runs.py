@@ -110,6 +110,48 @@ def mainT01(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=
     return 0
 
 
+def mainZY(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=10000):
+
+    seed = time.time()
+
+    env = 'z'
+    meas_basis = 'y'
+    dt = simtime/N
+
+    ### main simulation
+
+    class_instance = QTT(env, meas_basis, theta=theta, temperature=0.5, seed=seed)
+
+    result = class_instance.freqSimulationResult(S, N, burnin, psi0, simtime, ncpu, delta, epsilon, res)
+
+    datapath = 'data/'
+    filename = path + datapath + 'eps' + str(epsilon).replace('.', '') + \
+        '_theta' + str(theta).replace('.', '') + '_dt' + str(dt).replace('.', '') + \
+        '_S' + str(S) + '_N' + str(N) + '_freqN' + str(delta.size) + '_burninN' + str(burnin) + '_T01'
+
+    np.save(filename, result)
+
+    ### calculating frequencies and standard deviation
+
+    measfreqres, stdfreq = measured_frequency_result(result, simtime)
+
+    freqpath = 'dtune_envZmeasY/'
+    savename = path + freqpath + 'OMEGA_' + 'eps' + str(epsilon).replace('.', '') + \
+        '_theta' + str(theta).replace('.', '') + '_dt' + str(dt).replace('.', '') + \
+        '_S' + str(S) + '_N' + str(N) + '_freqN' + str(delta.size) + '_burninN' + str(burnin) + '_T01'
+
+    np.save(savename, measfreqres)
+
+    savenamestd = path + freqpath + 'STD_' + 'eps' + str(epsilon).replace('.', '') + \
+        '_theta' + str(theta).replace('.', '') + '_dt' + str(dt).replace('.', '') + \
+        '_S' + str(S) + '_N' + str(N) + '_freqN' + str(delta.size) + '_burninN' + str(burnin) + '_T01'
+
+    np.save(savenamestd, stdfreq)
+
+
+    return 0
+
+
 
 
 path = '../../../njord/erlenalo/'
@@ -290,7 +332,7 @@ main(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
 
 
 # eps 0007-0001, temperature 0.1
-
+"""
 epsilon = 0.001
 
 S = 256
@@ -308,7 +350,7 @@ simtime = N*dt
 ncpu = 256
 psi0 = xplus
 
-#mainT01(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
+mainT01(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
 
 
 epsilon = 0.0035
@@ -349,7 +391,27 @@ ncpu = 256
 psi0 = xplus
 
 mainT01(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
+"""
 
 
+epsilon = 0.003
+
+S = 128
+N = 200000
+burnin = 150000
+res = 10000
+
+print('simulating for epsilon : ', epsilon)
+ndelta = 24
+delta = np.linspace(-0.015, 0.015, ndelta)
+theta = 0.01
+
+dt = 0.01
+simtime = N*dt
+ncpu = 128
+psi0 = xplus
+
+
+mainZY(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
 
 # end
