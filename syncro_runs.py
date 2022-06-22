@@ -395,7 +395,7 @@ mainT01(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
 
 
 # eps 0007-0001, temperature 0.1, with bigger delta values and N=200000(faster)
-
+"""
 epsilon = 0.001
 
 S = 256
@@ -415,7 +415,7 @@ psi0 = xplus
 
 mainT01(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
 
-
+"""
 epsilon = 0.0035
 
 S = 256
