@@ -634,7 +634,7 @@ mainT01YZ(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=re
 
 
 # eps 0007-0001, temperature 0.5, with bigger delta values and N=200000(faster)
-
+"""
 epsilon = 0.001
 
 S = 128
@@ -691,6 +691,26 @@ dt = 0.01
 simtime = N*dt
 ncpu = 128
 psi0 = bas0
+
+mainT05YZ(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
+"""
+
+epsilon = 0.0015
+
+S = 128
+N = 200000
+burnin = 100000
+res = 10000
+
+print('simulating for epsilon : ', epsilon)
+ndelta = 48
+delta = np.linspace(-0.3, 0.3, ndelta)
+theta = 0.01
+
+dt = 0.01
+simtime = N*dt
+ncpu = 128
+psi0 = xplus
 
 mainT05YZ(S, N, theta, simtime, psi0, ncpu, burnin, delta, epsilon, path, res=res)
 
